@@ -1,9 +1,9 @@
-import { Button } from '@/shared/ui/button'
+import { Button } from "@/shared/ui/button";
 
-export default function Home() {
-	return (
-		<div>
-			<Button size='lg'>Hello</Button>
-		</div>
-	)
+export default async function Home() {
+  return (
+    <div>
+      <Button size="lg">Hello</Button>
+    </div>
+  );
 }
