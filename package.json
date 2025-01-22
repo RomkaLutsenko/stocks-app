@@ -1,0 +1,26 @@
+{
+	"name": "stocks-app",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"client": "npm run dev --prefix client",
+		"server": "python server/server.py",
+		"start": "concurrently \"npm run client\" \"npm run server\""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/RomkaLutsenko/stocks-app.git"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "commonjs",
+	"bugs": {
+		"url": "https://github.com/RomkaLutsenko/stocks-app/issues"
+	},
+	"homepage": "https://github.com/RomkaLutsenko/stocks-app#readme",
+	"description": "",
+	"dependencies": {
+		"concurrently": "^9.1.2"
+	}
+}
