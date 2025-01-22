@@ -16,7 +16,7 @@ interface ForecastState {
 }
 
 export const useForecastStore = create<ForecastState>((set) => ({
-  dateRange: { start: "2016-01-04", end: "2021-07-12" },
+  dateRange: { start: "2016-01-04", end: "2021-07-13" },
   forecastDays: "7",
   stock: "SBER.ME",
   selectedMacro: [],
