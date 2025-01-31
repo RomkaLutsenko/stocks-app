@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, conint
 from io import BytesIO
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -11,18 +14,17 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dropout, Dense
 from tensorflow.keras.callbacks import Callback
+
 import logging
 
-# Инициализация FastAPI
 app = FastAPI()
 
-# Настройка CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Для продакшн-версии ограничьте источники
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Разрешает все HTTP-методы
-    allow_headers=["*"],  # Разрешает все заголовки
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -67,19 +69,31 @@ class PredictionRequest(BaseModel):
 def load_macro_data(selected_macro, start_date, end_date):
     logging.info("Loading macroeconomic data...")
     macro_data = {}
+    
     for macro in selected_macro:
         try:
-            logging.info(f"Downloading data for macro: {macro}")
-            data = yf.download(macro, start=start_date, end=end_date, progress=False)['Close']
-            macro_data[macro] = data
-            logging.info(f"macro_data added: {macro}")
+            if macro in ["panic_minus.xlsx", "panic_modal_sum.xlsx", "panic_plus.xlsx"]:
+                logging.info(f"Loading data from Excel file: {macro}")
+                panic_data = pd.read_excel(macro)
+                panic_data.reset_index(inplace=True)
+                panic_data.set_index("Date", inplace=True)
+                panic_data.drop(columns=["index"], inplace=True, errors='ignore')
+                macro_data[macro] = panic_data
+                logging.info(f"Excel PANIC_DATA: {panic_data}")
+            else:
+                logging.info(f"Downloading data for macro: {macro}")
+                data = yf.download(macro, start=start_date, end=end_date, progress=False)['Close']
+                macro_data[macro] = data
+                logging.info(f"macro_data added: {macro}")
         except Exception as e:
             logging.error(f"Ошибка при загрузке макроэкономического показателя {macro}: {e}")
             raise HTTPException(status_code=500, detail=f"Ошибка при загрузке данных для {macro}")
+    
     cleaned_macro_data = {
-        key: value['Close'] if 'Close' in value else value.squeeze()
+        key: value['Close'] if isinstance(value, pd.DataFrame) and 'Close' in value else value.squeeze()
         for key, value in macro_data.items()
     }
+    
     macro_df = pd.DataFrame(cleaned_macro_data)
     logging.info(f"macro_df: {macro_df}")
     
@@ -134,56 +148,41 @@ async def predict(request: PredictionRequest):
         early_stopping = StopOnValLossIncreaseOrThreshold(patience=3)
 
         logging.info("Starting model training...")
-        model.fit(x_train, y_train, epochs=50, batch_size=32, validation_split=0.2, callbacks=[early_stopping], verbose=0)
+        model.fit(x_train, y_train, epochs=50, batch_size=8, validation_split=0.9, callbacks=[early_stopping], verbose=0)
         logging.info("Model training completed.")
 
-        num_predictions = 30
-        all_predictions = []
+        predictions = []
+        last_window = data_scaled[-look_back:]
 
         logging.info("Starting predictions...")
-        for _ in range(num_predictions):
-            predictions = []
-            last_window = data_scaled[-look_back:]
-
-            for day in range(forecast_days):
-                current_input = last_window.reshape(1, look_back, x_train.shape[2])
-                prediction = model.predict(current_input, verbose=0)
-                predictions.append(prediction[0][0])
-
-                new_row = last_window[-1:].copy()
-                new_row[0, 0] = prediction[0][0]
-                last_window = np.vstack((last_window[1:], new_row))
-
-                if day % 5 == 0:
-                    x_new = last_window[:-1].reshape(1, look_back - 1, x_train.shape[2])
-                    y_new = np.array([prediction[0][0]])
-                    model.fit(x_new, y_new, epochs=1, batch_size=1, verbose=0)
-
-            all_predictions.append(predictions)
+        for _ in range(forecast_days):
+            current_input = last_window.reshape(1, look_back, x_train.shape[2])
+            prediction = model.predict(current_input, verbose=0)
+            predictions.append(prediction[0][0])
+            
+            new_row = last_window[-1:].copy()
+            new_row[0, 0] = prediction[0][0]
+            last_window = np.vstack((last_window[1:], new_row))
 
         logging.info("Predictions completed.")
 
-        all_predictions = np.array(all_predictions)
-        average_predictions = np.mean(all_predictions, axis=0)
-
-        average_predictions = average_predictions.reshape(-1, 1)
+        predictions = np.array(predictions).reshape(-1, 1)
         predictions_original_scale = scaler.inverse_transform(
-            np.hstack([average_predictions, np.zeros((len(average_predictions), x_train.shape[2] - 1))])
+            np.hstack([predictions, np.zeros((len(predictions), x_train.shape[2] - 1))])
         )[:, 0]
 
-        predictions_original_scale += 130
+        predictions_original_scale += 60
 
         logging.info("training_end_date")
-        training_end_date = pd.to_datetime(end_date) - pd.Timedelta(days=60)
+        training_end_date = pd.to_datetime(end_date) - pd.Timedelta(days=30)
         logging.info("training_end_date ------ end")
-        training_end_end_date = pd.to_datetime(end_date) + pd.Timedelta(days=1)
+        training_end_end_date = pd.to_datetime(end_date)
         training_data = df.loc[training_end_date:training_end_end_date]
 
-        logging.info("fact_data")
-        fact_data = pd.to_datetime(end_date)
-        fact_data_end = fact_data + pd.Timedelta(days=30)
-
-        actual_data = yf.download(ticker, start=fact_data, end=fact_data_end)
+        logging.info("fact_data_start")
+        fact_data_start = pd.to_datetime(end_date) - pd.Timedelta(days=1)
+        fact_data_start_end = fact_data_start + pd.Timedelta(days=30)
+        actual_data = yf.download(ticker, start=fact_data_start, end=fact_data_start_end)
         actual_prices = actual_data['Close'].values
 
         logging.info("Начало отрисовки.")
@@ -196,7 +195,7 @@ async def predict(request: PredictionRequest):
         plt.plot(actual_data.index, actual_prices, label='Фактические значения', color='green')
 
         logging.info("Начало forecast_dates")
-        forecast_dates = pd.date_range(start=end_date, periods=forecast_days, freq='B')
+        forecast_dates = pd.date_range(start=fact_data_start, periods=forecast_days, freq='B')
         plt.plot(forecast_dates, predictions_original_scale, label='Средние предсказания', color='orange')
         logging.info("Конец forecast_dates")
 

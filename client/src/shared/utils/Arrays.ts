@@ -30,4 +30,7 @@ export const macro = [
   { symbol: "SBER.ME", name: "Сбербанк" },
   { symbol: "NG=F", name: "Природный газ" },
   { symbol: "^VIX", name: "Индекс волатильности (VIX)" },
+  { symbol: "panic_minus.xlsx", name: "Индекс паники отрицательный" },
+  { symbol: "panic_plus.xlsx", name: "Индекс паники положительный" },
+  { symbol: "panic_modal_sum.xlsx", name: "Индекс паники по модулю" },
 ];

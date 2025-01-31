@@ -12,7 +12,7 @@ export const Header: React.FC = () => {
     forecastDays,
     stock,
     selectedMacro,
-    setDateRange,
+    //setDateRange,
     setForecastDays,
     setImageUrl,
   } = useForecastStore();
