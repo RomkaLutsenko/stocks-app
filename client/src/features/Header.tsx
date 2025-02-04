@@ -5,16 +5,16 @@ import SearchDropdown from "@/features/SearchDropdown";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { useMutation } from "@tanstack/react-query";
+import { DatePickerWithRange } from "./DatePickerWithRange";
 
 export const Header: React.FC = () => {
   const {
     dateRange,
-    forecastDays,
     stock,
     selectedMacro,
-    //setDateRange,
-    setForecastDays,
+    daysRange,
     setImageUrl,
+    setDaysRange,
   } = useForecastStore();
 
   const handleForecast = () => {
@@ -23,9 +23,9 @@ export const Header: React.FC = () => {
     // Сохраняем данные в localStorage
     const forecastData = {
       dateRange,
-      forecastDays,
       stock,
       selectedMacro,
+      daysRange,
     };
     localStorage.setItem("forecastData", JSON.stringify(forecastData));
 
@@ -36,11 +36,11 @@ export const Header: React.FC = () => {
   const mutation = useMutation({
     mutationFn: async (data: {
       dateRange: { start: string; end: string };
-      forecastDays: string;
-      stock: string;
+      stock: { symbol: string; name: string };
       selectedMacro: string[];
+      daysRange: string;
     }) => {
-      const response = await fetch("http://localhost:8000/predict", {
+      const response = await fetch("http://185.41.163.126:8000/predict", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -54,6 +54,7 @@ export const Header: React.FC = () => {
 
       // Получаем изображение в виде blob
       const blob = await response.blob();
+      console.log("blob");
       return URL.createObjectURL(blob); // Создаем URL для отображения изображения
     },
     onSuccess: (imageURL) => {
@@ -67,21 +68,17 @@ export const Header: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between mb-4">
-      {/* <DatePickerWithRange
-        className="mr-4"
-        onDateChange={(start, end) => {
-          setDateRange(start, end);
-        }}
-      /> */}
       <div>
-        Пока что период(на котором обучается модель) один: с 2016-01-04 по
-        2021-07-12
+        Период обучения: с 2016-01-04 до первой даты, которую вы указали в
+        календаре
       </div>
+      {<DatePickerWithRange className="mr-4" />}
+      <div>Сколько дополнительных дней слева и справа отображать:</div>
       <Input
-        placeholder="На сколько дней вперед прогноз"
+        placeholder="Сколько дополнительных дней справа и слева отображать"
         className="mr-4 w-60"
-        value={forecastDays}
-        onChange={(e) => setForecastDays(e.target.value)}
+        value={daysRange}
+        onChange={(e) => setDaysRange(e.target.value)}
       />
       <SearchDropdown />
       <Button onClick={handleForecast}>Сделать прогноз</Button>

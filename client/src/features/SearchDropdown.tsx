@@ -27,7 +27,7 @@ const SearchDropdown = () => {
 
   // Обработчик выбора элемента
   const handleSelect = (ticker: { symbol: string; name: string }) => {
-    setStock(ticker.symbol); // Устанавливаем выбранный тикер в поле ввода
+    setStock(ticker); // Устанавливаем выбранный тикер в поле ввода
     setDropdownVisible(false); // Скрываем выпадающий список
   };
 
@@ -56,7 +56,7 @@ const SearchDropdown = () => {
         type="text"
         placeholder="Поиск по доступным акциям"
         className="w-full p-2 border rounded"
-        value={tickers.find((t) => t.symbol === stock)?.name || ""}
+        value={tickers.find((t) => t.symbol === stock.symbol)?.name || ""}
         onChange={handleInputChange}
         onFocus={() => setDropdownVisible(true)} // Показать список при фокусе
       />
