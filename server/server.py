@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -135,10 +137,13 @@ def load_macro_data(selected_macro, learning_start_date, learning_end_date):
                 else:
                     print(f"Нет данных для {name} за указанный период.")
     
-    # Объединяем все Series в один DataFrame по индексу (датам)
-    # Используем pd.concat, чтобы сохранить все даты (можно применить join='inner' для пересечения)
+    # Преобразуем все Series в macro_data к datetime64 перед объединением
+    for key in macro_data:
+        macro_data[key].index = pd.to_datetime(macro_data[key].index)
+    # Объединяем данные в DataFrame
     macro_df = pd.DataFrame(macro_data)
-    macro_df.index = pd.to_datetime(macro_df.index).to_series().dt.date
+
+    macro_df.index = pd.to_datetime(macro_df.index)
     macro_df.index.name = "Date"
 
     return macro_df
@@ -191,7 +196,15 @@ async def predict(request: PredictionRequest):
         logging.info(f"Stock data loaded. Shape: {stock_data.shape}")
 
         macro_data = load_macro_data(selected_macro, learning_start_date, learning_end_date)
+        # Определяем столбцы, пропуски в которых не надо заменять
+        exclude_columns = {"Индекс паники отрицательный", "Индекс паники положительный", "Индекс паники по модулю"}
+        # Заполняем NaN средними значениями только для нужных столбцов
+        for col in macro_data.columns:
+            if col not in exclude_columns:
+                macro_data[col].fillna(macro_data[col].mean(), inplace=True)
+
         macro_data = macro_data.dropna(how='any')
+        
         logging.info(f"Macro data loaded. Shape: {macro_data.shape}")
         
         df = pd.concat([stock_data, macro_data], axis=1).dropna()
@@ -246,7 +259,6 @@ async def predict(request: PredictionRequest):
         logging.info(f"left_right_range {left_right_range}")
         all_actual_candles = []
 
-        logging.info(f"forecast_end_extendedasdasdasdasd {forecast_end_extended}")
         with Client(API_KEY) as client:
             for period_start, period_end in daterange(forecast_start_date, forecast_end_extended, max_period):
                 try:
@@ -310,7 +322,7 @@ async def predict(request: PredictionRequest):
         return StreamingResponse(buf, media_type='image/png')
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e, 'aasdasdasdasdasd'))
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForecastStore } from "@/app/store/zustand";
+import { MacroIndicator, useForecastStore } from "@/app/store/zustand";
 import SearchDropdown from "@/features/SearchDropdown";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
     mutationFn: async (data: {
       dateRange: { start: string; end: string };
       stock: { symbol: string; name: string };
-      selectedMacro: string[];
+      selectedMacro: MacroIndicator[];
       daysRange: string;
     }) => {
       const response = await fetch("http://185.41.163.126:8000/predict", {
@@ -68,15 +68,17 @@ export const Header: React.FC = () => {
 
   return (
     <div className="flex items-center justify-between mb-4">
-      <div>
+      <div className="mr-4">
         Период обучения: с 2016-01-04 до первой даты, которую вы указали в
         календаре
       </div>
       {<DatePickerWithRange className="mr-4" />}
-      <div>Сколько дополнительных дней слева и справа отображать:</div>
+      <div className="mr-4">
+        Сколько дополнительных дней слева и справа отображать:
+      </div>
       <Input
         placeholder="Сколько дополнительных дней справа и слева отображать"
-        className="mr-4 w-60"
+        className="mr-4 w-11"
         value={daysRange}
         onChange={(e) => setDaysRange(e.target.value)}
       />

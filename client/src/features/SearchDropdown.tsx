@@ -50,7 +50,7 @@ const SearchDropdown = () => {
   }, []);
 
   return (
-    <div className="relative w-80" ref={dropdownRef}>
+    <div className="relative w-80 mr-4" ref={dropdownRef}>
       {/* Поле ввода */}
       <input
         type="text"

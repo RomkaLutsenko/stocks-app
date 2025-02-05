@@ -1,9 +1,15 @@
+import { addDays, format } from "date-fns";
 import { create } from "zustand";
+
+export interface MacroIndicator {
+  symbol: string;
+  name: string;
+}
 
 interface ForecastState {
   dateRange: { start: string; end: string };
   stock: { symbol: string; name: string };
-  selectedMacro: string[];
+  selectedMacro: MacroIndicator[];
   daysRange: string;
 
   imageUrl: string | null;
@@ -11,12 +17,15 @@ interface ForecastState {
 
   setDateRange: (start: string, end: string) => void;
   setStock: (chosenStock: { symbol: string; name: string }) => void;
-  setSelectedMacro: (checkboxes: string[]) => void;
+  setSelectedMacro: (checkboxes: MacroIndicator[]) => void;
   setDaysRange: (daysRange: string) => void;
 }
 
+const defaultStart = format(addDays(new Date(), -7), "yyyy-MM-dd");
+const defaultEnd = format(new Date(), "yyyy-MM-dd");
+
 export const useForecastStore = create<ForecastState>((set) => ({
-  dateRange: { start: "2016-01-04", end: "2021-07-13" },
+  dateRange: { start: defaultStart, end: defaultEnd },
   stock: { symbol: "BBG004730N88", name: "Сбербанк" },
   selectedMacro: [],
   daysRange: "30",
