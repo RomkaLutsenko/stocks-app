@@ -22,13 +22,15 @@ export default function Home() {
               <p className="mt-4 text-gray-600">Загрузка...</p>
             </div>
           ) : imageUrl ? (
-            <Image
-              src={imageUrl}
-              width="1000"
-              height="1000"
-              alt="Прогноз"
-              unoptimized
-            />
+            <div className="w-full h-full relative">
+              <Image
+                src={imageUrl}
+                fill
+                alt="Прогноз"
+                className="object-contain"
+                unoptimized
+              />
+            </div>
           ) : (
             <p className="text-gray-500">Нет данных</p>
           )}
