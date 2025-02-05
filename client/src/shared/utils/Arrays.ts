@@ -51,9 +51,9 @@ export const tickers = [
 
 // Макрофакторы с названиями
 export const macro = [
-  { symbol: "panic_minus.xlsx", name: "Индекс паники отрицательный" },
-  { symbol: "panic_plus.xlsx", name: "Индекс паники положительный" },
-  { symbol: "panic_modal_sum.xlsx", name: "Индекс паники по модулю" },
+  { symbol: "panic_minus.xlsx", name: "Индекс паники 1" }, //отрицательный
+  { symbol: "panic_plus.xlsx", name: "Индекс паники 2" }, //положительный
+  { symbol: "panic_modal_sum.xlsx", name: "Индекс паники 3" }, // по модулю
 
   { symbol: "USD000UTSTOM", name: "Курс рубля к доллару" },
   // { symbol: "BBG00H6F7DW5", name: "Цена на нефть Brent" },

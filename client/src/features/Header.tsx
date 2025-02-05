@@ -15,23 +15,8 @@ export const Header: React.FC = () => {
     daysRange,
     setImageUrl,
     setDaysRange,
+    setIsLoading,
   } = useForecastStore();
-
-  const handleForecast = () => {
-    localStorage.removeItem("forecastData");
-
-    // Сохраняем данные в localStorage
-    const forecastData = {
-      dateRange,
-      stock,
-      selectedMacro,
-      daysRange,
-    };
-    localStorage.setItem("forecastData", JSON.stringify(forecastData));
-
-    // Отправляем запрос с этими данными
-    mutation.mutate(forecastData);
-  };
 
   const mutation = useMutation({
     mutationFn: async (data: {
@@ -40,6 +25,7 @@ export const Header: React.FC = () => {
       selectedMacro: MacroIndicator[];
       daysRange: string;
     }) => {
+      setIsLoading(true);
       const response = await fetch("http://185.41.163.126:8000/predict", {
         method: "POST",
         headers: {
@@ -60,11 +46,30 @@ export const Header: React.FC = () => {
     onSuccess: (imageURL) => {
       setImageUrl(imageURL); // Сохраняем URL в zustand
     },
+    onSettled: () => {
+      setIsLoading(false); // Завершаем загрузку независимо от результата
+    },
     onError: (error) => {
       console.error("Ошибка:", error);
       alert("Произошла ошибка при выполнении запроса.");
     },
   });
+
+  const handleForecast = () => {
+    localStorage.removeItem("forecastData");
+
+    // Сохраняем данные в localStorage
+    const forecastData = {
+      dateRange,
+      stock,
+      selectedMacro,
+      daysRange,
+    };
+    localStorage.setItem("forecastData", JSON.stringify(forecastData));
+
+    // Отправляем запрос с этими данными
+    mutation.mutate(forecastData);
+  };
 
   return (
     <div className="flex items-center justify-between mb-4">

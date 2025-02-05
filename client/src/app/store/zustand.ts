@@ -11,6 +11,7 @@ interface ForecastState {
   stock: { symbol: string; name: string };
   selectedMacro: MacroIndicator[];
   daysRange: string;
+  isLoading: boolean;
 
   imageUrl: string | null;
   setImageUrl: (url: string) => void;
@@ -19,6 +20,7 @@ interface ForecastState {
   setStock: (chosenStock: { symbol: string; name: string }) => void;
   setSelectedMacro: (checkboxes: MacroIndicator[]) => void;
   setDaysRange: (daysRange: string) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const defaultStart = format(addDays(new Date(), -7), "yyyy-MM-dd");
@@ -29,6 +31,7 @@ export const useForecastStore = create<ForecastState>((set) => ({
   stock: { symbol: "BBG004730N88", name: "Сбербанк" },
   selectedMacro: [],
   daysRange: "30",
+  isLoading: false,
 
   imageUrl: null,
   setImageUrl: (url) => set({ imageUrl: url }),
@@ -37,4 +40,5 @@ export const useForecastStore = create<ForecastState>((set) => ({
   setStock: (chosenStock) => set({ stock: chosenStock }),
   setSelectedMacro: (checkboxes) => set({ selectedMacro: checkboxes }),
   setDaysRange: (daysRange) => set({ daysRange }),
+  setIsLoading: (loading) => set({ isLoading: loading }),
 }));
